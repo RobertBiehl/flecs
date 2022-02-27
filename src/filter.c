@@ -1628,30 +1628,16 @@ const ecs_table_record_t *next_table(
         return NULL;
     }
 
-    ecs_table_iter_t it;
-    
-    if (iter->empty_tables) {
-        if (flecs_idr_empty_iter(idr, &it)) {
-            it.cur = it.begin + iter->index;
-        }
-        if (it.cur >= it.end) {
+    const ecs_table_record_t *tr;
+    if (!(tr = flecs_table_cache_next(&iter->it, ecs_table_record_t))) {
+        if (iter->empty_tables) {
             iter->empty_tables = false;
-            iter->index = 0;
+            flecs_table_cache_iter(&idr->cache, &iter->it);
+            tr = flecs_table_cache_next(&iter->it, ecs_table_record_t);
         }
     }
 
-    if (!iter->empty_tables) {
-        if (flecs_idr_iter(idr, &it)) {
-            it.cur = it.begin + iter->index;
-        }
-        if (it.cur >= it.end) {
-            return NULL;
-        }
-    }
-
-    iter->index ++;
-
-    return it.cur;
+    return tr;
 }
 
 static
